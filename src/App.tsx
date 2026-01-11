@@ -1,5 +1,7 @@
+import { GrassScene } from './components/GrassScene'
+
 function App() {
-  return <div>hello world</div>
+  return <GrassScene />
 }
 
 export default App
