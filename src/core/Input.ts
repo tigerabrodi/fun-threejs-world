@@ -47,6 +47,10 @@ class InputManager {
     return this.keys.has('Space')
   }
 
+  isSprinting() {
+    return this.keys.has('ShiftLeft') || this.keys.has('ShiftRight')
+  }
+
   isKeyDown({ code }: { code: string }) {
     return this.keys.has(code)
   }

@@ -93,10 +93,12 @@ export function GrassScene() {
       // Register update callbacks
       gameLoop.register({
         callback: ({ delta }) => {
-          if (character) {
-            character.update({ delta })
-          }
+          // Update camera first (processes mouse input)
           thirdPersonCamera.update({ delta })
+          // Then update character (uses camera directions for movement)
+          if (character) {
+            character.update({ delta, camera: thirdPersonCamera })
+          }
           renderer.render(scene, camera)
         },
       })

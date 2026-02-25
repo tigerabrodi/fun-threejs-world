@@ -20,9 +20,8 @@ export class ThirdPersonCamera {
   // Target offset (look at character's chest, not feet)
   private targetOffset = new THREE.Vector3(0, 1.5, 0)
 
-  // Smoothing
+  // Current position (used for initialization)
   private currentPosition = new THREE.Vector3()
-  private smoothing = 0.1
 
   constructor({ camera }: { camera: THREE.PerspectiveCamera }) {
     this.camera = camera
@@ -35,7 +34,7 @@ export class ThirdPersonCamera {
     this.currentPosition.copy(this.camera.position)
   }
 
-  update({ delta }: { delta: number }) {
+  update(_params: { delta: number }) {
     if (!this.target) return
 
     // Get mouse input
@@ -48,15 +47,8 @@ export class ThirdPersonCamera {
     // Clamp vertical angle
     this.phi = Math.max(this.minPhi, Math.min(this.maxPhi, this.phi))
 
-    // Calculate ideal camera position
+    // Update camera position (no smoothing - directly follows character)
     this.updateCameraPosition()
-
-    // Frame-rate independent smoothing
-    const t = 1.0 - Math.pow(1.0 - this.smoothing, delta * 60)
-    this.currentPosition.lerp(this.camera.position, t)
-
-    // Apply smoothed position
-    this.camera.position.copy(this.currentPosition)
 
     // Look at target
     const lookAtPoint = this.target.position.clone().add(this.targetOffset)

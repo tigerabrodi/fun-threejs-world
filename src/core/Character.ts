@@ -1,6 +1,12 @@
 import * as THREE from 'three/webgpu'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js'
+import { AnimationStateMachine } from './AnimationStateMachine'
+import { IdleState } from './states/IdleState'
+import { WalkState } from './states/WalkState'
+import { SprintState } from './states/SprintState'
+import { CharacterController } from './CharacterController'
+import type { ThirdPersonCamera } from './ThirdPersonCamera'
 
 const CHARACTER_URL =
   'https://spawnfile.io/dev/character-assets/1768117533506-e15f88b3-49f2-433e-9f48-c16e4aeeb726.glb'
@@ -11,6 +17,8 @@ export class Character {
   model!: THREE.Group
   mixer!: THREE.AnimationMixer
   animations: Map<string, THREE.AnimationAction> = new Map()
+  stateMachine = new AnimationStateMachine()
+  controller = new CharacterController()
 
   async load({
     renderer,
@@ -43,25 +51,29 @@ export class Character {
       this.animations.set(clip.name, action)
     }
 
-    // Play idle by default
-    const idle = this.animations.get('Idle')
-    if (idle) {
-      idle.play()
-    }
+    // Setup animation state machine
+    this.stateMachine.addState({ state: new IdleState(this) })
+    this.stateMachine.addState({ state: new WalkState(this) })
+    this.stateMachine.addState({ state: new SprintState(this) })
+    this.stateMachine.setState({ name: 'idle' })
 
     return this
   }
 
-  update({ delta }: { delta: number }) {
+  update({
+    delta,
+    camera,
+  }: {
+    delta: number
+    camera: ThirdPersonCamera
+  }) {
+    // Update animation mixer
     this.mixer.update(delta)
-  }
 
-  playAnimation({ name }: { name: string }) {
-    const action = this.animations.get(name)
-    if (action) {
-      this.mixer.stopAllAction()
-      action.reset()
-      action.play()
-    }
+    // Update state machine (handles animation transitions)
+    this.stateMachine.update({ delta })
+
+    // Update character movement
+    this.controller.update({ delta, model: this.model, camera })
   }
 }
